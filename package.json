@@ -35,8 +35,13 @@
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^7.1.1",
     "@mui/material": "^7.1.1",
+    "@tanstack/react-query": "^5.80.7",
     "firebase": "^11.9.1",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "react-firebase-hooks": "^5.1.1"
+  },
+  "volta": {
+    "node": "22.16.0"
   }
 }

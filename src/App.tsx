@@ -1,9 +1,12 @@
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
-import { AppBar, Box, Button, Toolbar, Typography } from '@mui/material';
-import { type User, onAuthStateChanged, signOut } from 'firebase/auth';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { type User, onAuthStateChanged } from 'firebase/auth';
 import { useEffect, useState } from 'react';
-import Login from './components/Login';
+import { DashboardPage } from './components/pages/DashboardPage';
+import { LoadingPage } from './components/pages/LoadingPage';
+import { LoginPage } from './components/pages/LoginPage';
 import { auth } from './config/firebase';
+import { queryClient } from './lib/queryClient';
 
 const theme = createTheme({
   palette: {
@@ -17,7 +20,7 @@ const theme = createTheme({
   },
 });
 
-export default function App() {
+export const App = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -30,67 +33,34 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
-
   if (loading) {
     return (
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '100vh',
-          }}
-        >
-          <Typography>Loading...</Typography>
-        </Box>
-      </ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <LoadingPage />
+        </ThemeProvider>
+      </QueryClientProvider>
     );
   }
 
   if (!user) {
     return (
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Login onLoginSuccess={() => {}} />
-      </ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <LoginPage />
+        </ThemeProvider>
+      </QueryClientProvider>
     );
   }
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Box sx={{ flexGrow: 1 }}>
-        <AppBar position="static">
-          <Toolbar>
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              Monthly Step Goal
-            </Typography>
-            <Typography sx={{ mr: 2 }}>
-              {user.displayName || user.email}
-            </Typography>
-            <Button color="inherit" onClick={handleLogout}>
-              ログアウト
-            </Button>
-          </Toolbar>
-        </AppBar>
-        <Box sx={{ p: 3 }}>
-          <Typography variant="h4">
-            ようこそ、{user.displayName}さん！
-          </Typography>
-          <Typography variant="body1" sx={{ mt: 2 }}>
-            ここにダッシュボードコンテンツが表示されます。
-          </Typography>
-        </Box>
-      </Box>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <DashboardPage user={user} />
+      </ThemeProvider>
+    </QueryClientProvider>
   );
-}
+};

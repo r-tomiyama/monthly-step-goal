@@ -1,23 +1,12 @@
-import GoogleIcon from '@mui/icons-material/Google';
+import { Google as GoogleIcon } from '@mui/icons-material';
 import { Box, Button, Container, Paper, Typography } from '@mui/material';
-import { signInWithPopup } from 'firebase/auth';
-import { auth, googleProvider } from '../config/firebase';
+import { login } from '../../../services';
 
 interface LoginProps {
   onLoginSuccess: () => void;
 }
 
-export default function Login({ onLoginSuccess }: LoginProps) {
-  const handleGoogleLogin = async () => {
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      console.log('Login successful:', result.user);
-      onLoginSuccess();
-    } catch (error) {
-      console.error('Login error:', error);
-    }
-  };
-
+export const Login = ({ onLoginSuccess }: LoginProps) => {
   return (
     <Container component="main" maxWidth="xs">
       <Box
@@ -39,7 +28,9 @@ export default function Login({ onLoginSuccess }: LoginProps) {
             fullWidth
             variant="contained"
             startIcon={<GoogleIcon />}
-            onClick={handleGoogleLogin}
+            onClick={() => {
+              login(onLoginSuccess);
+            }}
             sx={{ mt: 3, mb: 2 }}
           >
             Googleでログイン
@@ -48,4 +39,4 @@ export default function Login({ onLoginSuccess }: LoginProps) {
       </Box>
     </Container>
   );
-}
+};
