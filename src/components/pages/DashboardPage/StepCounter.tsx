@@ -16,7 +16,7 @@ export const StepCounter = () => {
 
   const content = isLoading ? (
     <IsLoading />
-  ) : (error || typeof steps === "undefined") ? (
+  ) : error || typeof steps === 'undefined' ? (
     <ErrorContent />
   ) : (
     <StepCounterContent steps={steps} />
@@ -50,6 +50,9 @@ const ErrorContent = () => {
 };
 
 const StepCounterContent = ({ steps }: { steps: number }) => {
+  const dailyGoal = 3000;
+  const achievement = (steps / dailyGoal) * 100;
+
   return (
     <Box display="flex" alignItems="center">
       <DirectionsWalk sx={{ fontSize: 40, mr: 2, color: 'primary.main' }} />
@@ -59,6 +62,10 @@ const StepCounterContent = ({ steps }: { steps: number }) => {
         </Typography>
         <Typography variant="h4" color="primary">
           {steps?.toLocaleString() || '0'} 歩
+        </Typography>
+        <Typography variant="body2" color="textSecondary">
+          目標: {dailyGoal.toLocaleString()} 歩 (
+          {achievement >= 100 ? '達成!' : `${achievement.toFixed(0)}%`})
         </Typography>
       </Box>
     </Box>
