@@ -6,9 +6,14 @@ interface MainLayoutProps {
   user: User;
   onLogout: () => void;
   children: ReactNode;
+  stepCounter?: ReactNode;
 }
 
-export const MainLayout = ({ user, onLogout, children }: MainLayoutProps) => {
+export const MainLayout = ({
+  onLogout,
+  children,
+  stepCounter,
+}: MainLayoutProps) => {
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
@@ -16,15 +21,14 @@ export const MainLayout = ({ user, onLogout, children }: MainLayoutProps) => {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             月間歩数目標
           </Typography>
-          <Typography sx={{ mr: 2 }}>{user.displayName}</Typography>
+          {stepCounter && <Box sx={{ mr: 3 }}>{stepCounter}</Box>}
+          {/* <Typography sx={{ mr: 2 }}>{user.displayName}</Typography> */}
           <Button color="inherit" onClick={onLogout}>
             ログアウト
           </Button>
         </Toolbar>
       </AppBar>
-      <Box component="main" sx={{ p: 3 }}>
-        {children}
-      </Box>
+      <Box component="main">{children}</Box>
     </Box>
   );
 };

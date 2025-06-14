@@ -80,7 +80,17 @@ const CumulativeStepsChartContent = ({
 }) => {
   const dailyGoal = 3000;
 
-  const cumulativeData: CumulativeChartData[] = monthlySteps.reduce(
+  const today = new Date();
+  const todayStr = today.toLocaleDateString('ja-JP', {
+    month: '2-digit',
+    day: '2-digit',
+  });
+
+  const validStepsData = monthlySteps.filter(
+    (day) => day.steps > 0 || day.date >= todayStr
+  );
+
+  const cumulativeData: CumulativeChartData[] = validStepsData.reduce(
     (acc: CumulativeChartData[], day, index) => {
       const cumulativeSteps =
         index === 0 ? day.steps : acc[index - 1].cumulativeSteps + day.steps;
@@ -95,13 +105,13 @@ const CumulativeStepsChartContent = ({
 
   const totalSteps =
     cumulativeData[cumulativeData.length - 1]?.cumulativeSteps || 0;
-  const daysInMonth = monthlySteps.length;
-  const monthlyGoal = dailyGoal * daysInMonth;
+  const validDaysCount = validStepsData.length;
+  const monthlyGoal = dailyGoal * validDaysCount;
   const achievementRate = (totalSteps / monthlyGoal) * 100;
   const maxCumulativeSteps = Math.max(totalSteps, monthlyGoal);
   const yAxisMax = Math.max(maxCumulativeSteps, monthlyGoal * 1.1);
 
-  const goalData = monthlySteps.map((day, index) => ({
+  const goalData = validStepsData.map((day, index) => ({
     date: day.date,
     goalCumulative: dailyGoal * (index + 1),
   }));
