@@ -10,6 +10,7 @@ import {
   Area,
   AreaChart,
   CartesianGrid,
+  Dot,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -17,6 +18,8 @@ import {
 } from 'recharts';
 import { auth } from '../../../config/firebase';
 import { useMonthlyStepsQuery } from '../../../hooks/useMonthlyStepsQuery';
+import { useStepGoalQuery } from '../../../hooks/useStepGoalQuery';
+import { StepGoalSetting } from './StepGoalSetting';
 
 interface ChartData {
   date: string;
@@ -25,7 +28,19 @@ interface ChartData {
 
 interface CumulativeChartData {
   date: string;
-  cumulativeSteps: number;
+  cumulativeSteps: number | null;
+}
+
+interface TickProps {
+  x: number;
+  y: number;
+  payload: { value: string };
+}
+
+interface DotProps {
+  cx: number;
+  cy: number;
+  payload: CumulativeChartData;
 }
 
 export const CumulativeStepsChart = () => {
@@ -35,21 +50,31 @@ export const CumulativeStepsChart = () => {
     isLoading,
     error,
   } = useMonthlyStepsQuery(user || null);
+  const { data: stepGoal } = useStepGoalQuery(user || null);
 
   const content = isLoading ? (
     <IsLoading />
   ) : error || !monthlySteps ? (
     <ErrorContent />
   ) : (
-    <CumulativeStepsChartContent monthlySteps={monthlySteps} />
+    <CumulativeStepsChartContent
+      monthlySteps={monthlySteps}
+      stepGoal={stepGoal}
+    />
   );
 
   return (
     <Card sx={{ mb: 2 }}>
       <CardContent>
-        <Typography variant="h6" sx={{ mb: 2 }}>
-          今月の累積歩数
-        </Typography>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{ mb: 2 }}
+        >
+          <Typography variant="h6">今月の累積歩数</Typography>
+          <StepGoalSetting />
+        </Box>
         {content}
       </CardContent>
     </Card>
@@ -75,10 +100,12 @@ const ErrorContent = () => {
 
 const CumulativeStepsChartContent = ({
   monthlySteps,
+  stepGoal,
 }: {
   monthlySteps: ChartData[];
+  stepGoal: { dailyStepGoal: number } | null | undefined;
 }) => {
-  const dailyGoal = 3000;
+  const dailyGoal = stepGoal?.dailyStepGoal || 3000;
 
   const today = new Date();
   const todayStr = today.toLocaleDateString('ja-JP', {
@@ -92,11 +119,15 @@ const CumulativeStepsChartContent = ({
 
   const cumulativeData: CumulativeChartData[] = validStepsData.reduce(
     (acc: CumulativeChartData[], day, index) => {
-      const cumulativeSteps =
-        index === 0 ? day.steps : acc[index - 1].cumulativeSteps + day.steps;
+      const isFutureDate = day.date > todayStr;
+      const cumulativeSteps = isFutureDate
+        ? acc[index - 1]?.cumulativeSteps || 0
+        : index === 0
+          ? day.steps
+          : (acc[index - 1]?.cumulativeSteps || 0) + day.steps;
       acc.push({
         date: day.date,
-        cumulativeSteps,
+        cumulativeSteps: isFutureDate ? null : cumulativeSteps,
       });
       return acc;
     },
@@ -104,16 +135,26 @@ const CumulativeStepsChartContent = ({
   );
 
   const totalSteps =
-    cumulativeData[cumulativeData.length - 1]?.cumulativeSteps || 0;
-  const validDaysCount = validStepsData.length;
-  const monthlyGoal = dailyGoal * validDaysCount;
-  const achievementRate = (totalSteps / monthlyGoal) * 100;
+    cumulativeData.filter((data) => data.cumulativeSteps !== null).pop()
+      ?.cumulativeSteps || 0;
+  const validDaysCount = cumulativeData.filter(
+    (data) => data.cumulativeSteps !== null
+  ).length;
+  const monthlyGoal = validDaysCount > 0 ? dailyGoal * validDaysCount : 0;
+  const achievementRate =
+    monthlyGoal > 0 ? (totalSteps / monthlyGoal) * 100 : 0;
   const maxCumulativeSteps = Math.max(totalSteps, monthlyGoal);
-  const yAxisMax = Math.max(maxCumulativeSteps, monthlyGoal * 1.1);
+  const yAxisMax = Math.max(maxCumulativeSteps, monthlyGoal * 1.25);
 
-  const goalData = validStepsData.map((day, index) => ({
+  const goalData = cumulativeData.map((day, index) => ({
     date: day.date,
-    goalCumulative: dailyGoal * (index + 1),
+    goalCumulative:
+      day.cumulativeSteps !== null
+        ? dailyGoal *
+          cumulativeData.filter(
+            (d, i) => i <= index && d.cumulativeSteps !== null
+          ).length
+        : null,
   }));
 
   return (
@@ -141,7 +182,30 @@ const CumulativeStepsChartContent = ({
             }}
           >
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" fontSize={12} interval="preserveStartEnd" />
+            <XAxis
+              dataKey="date"
+              fontSize={12}
+              interval="preserveStartEnd"
+              tick={(props: TickProps) => {
+                const { x, y, payload } = props;
+                const isToday = payload.value === todayStr;
+                return (
+                  <g transform={`translate(${x},${y})`}>
+                    <text
+                      x={0}
+                      y={0}
+                      dy={16}
+                      textAnchor="middle"
+                      fill={isToday ? '#2196f3' : '#666'}
+                      fontSize={12}
+                      fontWeight={isToday ? 'bold' : 'normal'}
+                    >
+                      {payload.value}
+                    </text>
+                  </g>
+                );
+              }}
+            />
             <YAxis
               fontSize={12}
               tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
@@ -153,6 +217,10 @@ const CumulativeStepsChartContent = ({
                 '累積歩数',
               ]}
               labelStyle={{ color: '#000' }}
+              labelFormatter={(label) => {
+                const isToday = label === todayStr;
+                return isToday ? `${label} (今日)` : label;
+              }}
             />
             <Area
               dataKey="cumulativeSteps"
@@ -160,6 +228,31 @@ const CumulativeStepsChartContent = ({
               fill="#1976d2"
               fillOpacity={0.3}
               strokeWidth={2}
+              dot={(props: unknown) => {
+                const { cx, cy, payload } = props as DotProps;
+                const isToday = payload.date === todayStr;
+                if (isToday) {
+                  return (
+                    <Dot
+                      cx={cx}
+                      cy={cy}
+                      r={6}
+                      fill="#2196f3"
+                      stroke="#2196f3"
+                      strokeWidth={3}
+                    />
+                  );
+                }
+                return (
+                  <Dot
+                    cx={cx}
+                    cy={cy}
+                    r={0}
+                    fill="transparent"
+                    stroke="transparent"
+                  />
+                );
+              }}
             />
             <Area
               data={goalData}

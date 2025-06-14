@@ -18,10 +18,26 @@ import {
 } from 'recharts';
 import { auth } from '../../../config/firebase';
 import { useMonthlyStepsQuery } from '../../../hooks/useMonthlyStepsQuery';
+import { useStepGoalQuery } from '../../../hooks/useStepGoalQuery';
+import { StepGoalSetting } from './StepGoalSetting';
 
 interface ChartData {
   date: string;
   steps: number;
+}
+
+interface TickProps {
+  x: number;
+  y: number;
+  payload: { value: string };
+}
+
+interface BarShapeProps {
+  payload: ChartData;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 export const MonthlyStepsChart = () => {
@@ -31,21 +47,28 @@ export const MonthlyStepsChart = () => {
     isLoading,
     error,
   } = useMonthlyStepsQuery(user || null);
+  const { data: stepGoal } = useStepGoalQuery(user || null);
 
   const content = isLoading ? (
     <IsLoading />
   ) : error || !monthlySteps ? (
     <ErrorContent />
   ) : (
-    <MonthlyStepsChartContent monthlySteps={monthlySteps} />
+    <MonthlyStepsChartContent monthlySteps={monthlySteps} stepGoal={stepGoal} />
   );
 
   return (
     <Card sx={{ mb: 2 }}>
       <CardContent>
-        <Typography variant="h6" sx={{ mb: 2 }}>
-          今月の歩数
-        </Typography>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{ mb: 2 }}
+        >
+          <Typography variant="h6">今月の歩数</Typography>
+          <StepGoalSetting />
+        </Box>
         {content}
       </CardContent>
     </Card>
@@ -71,10 +94,18 @@ const ErrorContent = () => {
 
 const MonthlyStepsChartContent = ({
   monthlySteps,
+  stepGoal,
 }: {
   monthlySteps: ChartData[];
+  stepGoal: { dailyStepGoal: number } | null | undefined;
 }) => {
-  const dailyGoal = 3000;
+  const dailyGoal = stepGoal?.dailyStepGoal || 3000;
+
+  const today = new Date();
+  const todayStr = today.toLocaleDateString('ja-JP', {
+    month: '2-digit',
+    day: '2-digit',
+  });
   const totalSteps = monthlySteps.reduce((sum, day) => sum + day.steps, 0);
   const daysWithSteps = monthlySteps.filter((day) => day.steps > 0).length;
   const averageSteps =
@@ -83,7 +114,7 @@ const MonthlyStepsChartContent = ({
     (day) => day.steps >= dailyGoal
   ).length;
   const maxSteps = Math.max(...monthlySteps.map((day) => day.steps));
-  const yAxisMax = Math.max(maxSteps, dailyGoal + 1000);
+  const yAxisMax = Math.max(maxSteps, dailyGoal * 1.25);
 
   return (
     <Box>
@@ -111,7 +142,30 @@ const MonthlyStepsChartContent = ({
             }}
           >
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" fontSize={12} interval="preserveStartEnd" />
+            <XAxis
+              dataKey="date"
+              fontSize={12}
+              interval="preserveStartEnd"
+              tick={(props: TickProps) => {
+                const { x, y, payload } = props;
+                const isToday = payload.value === todayStr;
+                return (
+                  <g transform={`translate(${x},${y})`}>
+                    <text
+                      x={0}
+                      y={0}
+                      dy={16}
+                      textAnchor="middle"
+                      fill={isToday ? '#2196f3' : '#666'}
+                      fontSize={12}
+                      fontWeight={isToday ? 'bold' : 'normal'}
+                    >
+                      {payload.value}
+                    </text>
+                  </g>
+                );
+              }}
+            />
             <YAxis
               fontSize={12}
               tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
@@ -120,8 +174,37 @@ const MonthlyStepsChartContent = ({
             <Tooltip
               formatter={(value: number) => [value.toLocaleString(), '歩数']}
               labelStyle={{ color: '#000' }}
+              labelFormatter={(label) => {
+                const isToday = label === todayStr;
+                return isToday ? `${label} (今日)` : label;
+              }}
             />
-            <Bar dataKey="steps" fill="#1976d2" radius={[2, 2, 0, 0]} />
+            <Bar
+              dataKey="steps"
+              fill="#1976d2"
+              radius={[2, 2, 0, 0]}
+              shape={(props: unknown) => {
+                const { payload, x, y, width, height } = props as BarShapeProps;
+                const isToday = payload.date === todayStr;
+                const isGoalAchieved = payload.steps >= dailyGoal;
+                const fill = isToday
+                  ? '#2196f3'
+                  : isGoalAchieved
+                    ? '#4caf50'
+                    : '#1976d2';
+                return (
+                  <rect
+                    x={x}
+                    y={y}
+                    width={width}
+                    height={height}
+                    fill={fill}
+                    rx={2}
+                    ry={2}
+                  />
+                );
+              }}
+            />
             <ReferenceLine
               y={dailyGoal}
               stroke="#ff5722"
