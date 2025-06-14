@@ -39,7 +39,8 @@
     "firebase": "^11.9.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-firebase-hooks": "^5.1.1"
+    "react-firebase-hooks": "^5.1.1",
+    "recharts": "^2.15.3"
   },
   "volta": {
     "node": "22.16.0"

@@ -87,6 +87,14 @@ pages/
 - メインコンポーネント: `index.tsx`
 - サブコンポーネント: `{機能名}.tsx`
 
+### 方針
+
+- メインページコンポーネントはレイアウトコンポーネントをラップして使用
+- データ取得は カスタムフック（`hooks/`）を使用
+- コンポーネントが肥大化することを避け、適度にコンポーネントを分離
+- ローディング・エラー・正常状態をそれぞれ独立したコンポーネントに分離
+  - この状態別サブコンポーネントはファイル内関数として定義
+
 ### 実装パターン
 
 #### メインページコンポーネント (index.tsx)
@@ -111,12 +119,51 @@ export const DashboardPage = ({ user }: DashboardPageProps) => {
 
 #### サブコンポーネント
 
+推奨パターン1
+
+```typescript
+export const StepCounter = () => {
+  const { data: steps, isLoading, error } = useXxxQuery();
+
+  const content = isLoading ? (<IsLoading />) : (error || !steps) ? (
+    <ErrorContent />
+  ) : (
+    <StepCounterContent steps={steps} />
+  );
+
+  return (
+    <Card sx={{ mb: 2 }}>
+      <CardContent>
+        {content}
+      </CardContent>
+    </Card>
+  )
+};
+
+const IsLoading = () => {
+  return ( ...);
+}
+
+const ErrorContent = () => {
+  return (...);
+}
+
+const StepCounterContent = (
+  { steps }: { steps: number }
+) => {
+  return (...);
+}
+```
+
+**非推奨パターン**
+
+同じUI表示を繰り返し記述することやコンポーネントが肥大化することを避ける
+
 ```typescript
 export default function StepCounter() {
   const [user] = useAuthState(auth);
   const { data: steps, isLoading, error } = useStepsQuery(user || null);
 
-  // ローディング状態のUI
   if (isLoading) {
     return (
       <Card sx={{ mb: 2 }}>
@@ -130,28 +177,21 @@ export default function StepCounter() {
     );
   }
 
-  // エラー状態のUI
   if (error) {
     return (
       <Card sx={{ mb: 2 }}>
         <CardContent>
-          <Box display="flex" alignItems="center">
+          <Box display="flex" alignItems="center" justifyContent="center" p={2}>
             <DirectionsWalk sx={{ fontSize: 40, mr: 2, color: 'error.main' }} />
-            <Box>
-              <Typography variant="h6" color="error">
-                エラー
-              </Typography>
-              <Typography variant="body2" color="error">
-                歩数データの取得に失敗しました
-              </Typography>
-            </Box>
+            <Typography variant="h6" color="error">
+              エラーが発生しました
+            </Typography>
           </Box>
         </CardContent>
       </Card>
     );
   }
 
-  // 正常状態のUI
   return (
     <Card sx={{ mb: 2 }}>
       <CardContent>
@@ -171,14 +211,6 @@ export default function StepCounter() {
   );
 }
 ```
-
-### ガイドライン
-
-- メインページコンポーネントはレイアウトコンポーネントをラップして使用
-- データ取得は カスタムフック（`hooks/`）を使用
-- ローディング・エラー・正常状態の UI を明示的に分岐
-- Material-UI の `Card` コンポーネントを基本単位として使用
-- アイコンは `@mui/icons-material` を使用
 
 ## ui/ ディレクトリ
 
