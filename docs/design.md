@@ -40,8 +40,7 @@ Google Fit APIを使用して歩数データを取得し、月間の歩数目標
 ### 2.4 開発ツール
 
 - **Vite** - 高速な開発サーバーとビルドツール
-- **Biome** - コード品質管理
-- **Prettier** - コードフォーマッター
+- **Biome** - コード品質管理（ESLint + Prettier の代替として使用）
 
 ## 3. アーキテクチャ
 
@@ -69,23 +68,31 @@ Google Fit APIを使用して歩数データを取得し、月間の歩数目標
 monthly-step-goal/
 ├── src/
 │   ├── components/       # UIコンポーネント
-│   │   ├── common/      # 共通コンポーネント
-│   │   ├── auth/        # 認証関連
-│   │   ├── dashboard/   # ダッシュボード
-│   │   └── settings/    # 設定画面
+│   │   ├── layouts/     # レイアウトコンポーネント
+│   │   ├── pages/       # ページコンポーネント
+│   │   │   ├── DashboardPage/
+│   │   │   ├── LoadingPage/
+│   │   │   └── LoginPage/
+│   │   └── ui/          # 共通UIコンポーネント
+│   ├── config/          # Firebase設定
 │   ├── hooks/           # カスタムフック
-│   ├── services/        # API通信ロジック
-│   ├── stores/          # Zustandストア
-│   ├── model/           # model定義
-│   ├── utils/           # ユーティリティ関数
+│   ├── lib/             # ライブラリ設定（QueryClient等）
+│   ├── services/        # 外部やAPI通信ロジック
+│   │   ├── googleFit/   # Google Fit API
+│   │   └── tokenStorage/ # トークン管理
 │   └── App.tsx
 ├── public/
 └── docs/
 ```
 
-## 4. 認証フロー
+## 4. UI/UXデザイン
 
-### 4.1 Firebase Authentication + Google OAuth2認証フロー
+- モバイルファースト設計
+- ブレークポイント: 640px, 768px, 1024px
+
+## 5. 認証フロー
+
+### 5.1 Firebase Authentication + Google OAuth2認証フロー
 
 1. ユーザーがログインボタンをクリック
 2. Firebase AuthのsignInWithPopup/signInWithRedirectを呼び出し
@@ -96,21 +103,21 @@ monthly-step-goal/
 7. Firestoreにユーザー情報を保存/更新
 8. アプリケーションにリダイレクト
 
-### 4.2 必要なスコープ
+### 5.2 必要なスコープ
 
 ```
 https://www.googleapis.com/auth/fitness.activity.read
 ```
 
-## 5. セキュリティ考慮事項
+## 6. セキュリティ考慮事項
 
-### 5.1 Firebase Authentication
+### 6.1 Firebase Authentication
 
 - Googleプロバイダーを使用した安全な認証
 - Firebaseが管理するセッショントークン
 - 自動的なトークンリフレッシュ
 
-### 5.2 Firestore セキュリティルール
+### 6.2 Firestore セキュリティルール
 
 ```javascript
 rules_version = '2';
@@ -129,32 +136,32 @@ service cloud.firestore {
 }
 ```
 
-### 5.3 APIキーの管理
+### 6.3 APIキーの管理
 
 - Firebase設定は環境変数で管理（.env.local）
 - Google Cloud ConsoleでAPIキーの制限設定
 
-## 6. パフォーマンス最適化
+## 7. パフォーマンス最適化
 
-### 6.1 データキャッシング
+### 7.1 データキャッシング
 
 - React Queryによる自動キャッシュ
 - Firestoreのオフライン永続化機能
 - 歩数データは5分間キャッシュ
 - オフライン対応（Firebase SDK内蔵）
 
-### 6.2 遅延読み込み
+### 7.2 遅延読み込み
 
 - React.lazyによるコード分割
 - 画像の遅延読み込み
 
-### 6.3 Firestoreの最適化
+### 7.3 Firestoreの最適化
 
 - 複合クエリのインデックス作成
 - データの非正規化による読み取り回数削減
 - バッチ書き込みの活用
 
-## 7. 今後の拡張可能性
+## 8. 今後の拡張可能性
 
 - 他のフィットネスデータ（カロリー、距離）の追加
 - 週間・年間目標の設定
