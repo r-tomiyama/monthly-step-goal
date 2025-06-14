@@ -215,6 +215,16 @@ const MonthlyStepsChartContent = ({
                 position: 'insideTopLeft',
               }}
             />
+            <ReferenceLine
+              y={averageSteps}
+              stroke="#9c27b0"
+              strokeDasharray="5 5"
+              strokeWidth={2}
+              label={{
+                value: `平均: ${averageSteps.toLocaleString()}歩`,
+                position: 'insideTopLeft',
+              }}
+            />
           </BarChart>
         </ResponsiveContainer>
       </Box>

@@ -146,16 +146,16 @@ const CumulativeStepsChartContent = ({
   const maxCumulativeSteps = Math.max(totalSteps, monthlyGoal);
   const yAxisMax = Math.max(maxCumulativeSteps, monthlyGoal * 1.25);
 
-  const goalData = cumulativeData.map((day, index) => ({
-    date: day.date,
-    goalCumulative:
-      day.cumulativeSteps !== null
-        ? dailyGoal *
-          cumulativeData.filter(
-            (d, i) => i <= index && d.cumulativeSteps !== null
-          ).length
-        : null,
-  }));
+
+  // 現在の1日平均歩数による予測線データ
+  const dailyAverage = validDaysCount > 0 ? totalSteps / validDaysCount : 0;
+  const combinedData = cumulativeData.map((day, index) => {
+    return {
+      ...day,
+      goalCumulative: dailyGoal * (index + 1), // 未来まで表示
+      predictionCumulative: dailyAverage * (index + 1),
+    };
+  });
 
   return (
     <Box>
@@ -169,11 +169,14 @@ const CumulativeStepsChartContent = ({
         <Typography variant="body2" color="textSecondary">
           達成率: {achievementRate.toFixed(1)}%
         </Typography>
+        <Typography variant="body2" color="textSecondary">
+          平均: {dailyAverage.toLocaleString()}歩/日
+        </Typography>
       </Box>
       <Box sx={{ width: '100%', height: 400 }}>
         <ResponsiveContainer>
           <AreaChart
-            data={cumulativeData}
+            data={combinedData}
             margin={{
               top: 20,
               right: 30,
@@ -212,10 +215,15 @@ const CumulativeStepsChartContent = ({
               domain={[0, yAxisMax]}
             />
             <Tooltip
-              formatter={(value: number) => [
-                value.toLocaleString(),
-                '累積歩数',
-              ]}
+              formatter={(value: number, name: string) => {
+                const displayName = name === 'cumulativeSteps' ? '実績' : 
+                                   name === 'goalCumulative' ? '目標' : 
+                                   name === 'predictionCumulative' ? '予測' : name;
+                return [
+                  value?.toLocaleString() || 0,
+                  displayName,
+                ];
+              }}
               labelStyle={{ color: '#000' }}
               labelFormatter={(label) => {
                 const isToday = label === todayStr;
@@ -255,10 +263,16 @@ const CumulativeStepsChartContent = ({
               }}
             />
             <Area
-              data={goalData}
               dataKey="goalCumulative"
               stroke="#ff5722"
               strokeDasharray="5 5"
+              fill="none"
+              strokeWidth={2}
+            />
+            <Area
+              dataKey="predictionCumulative"
+              stroke="#9c27b0"
+              strokeDasharray="3 3"
               fill="none"
               strokeWidth={2}
             />
