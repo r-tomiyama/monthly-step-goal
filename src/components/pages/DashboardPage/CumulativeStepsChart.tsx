@@ -159,7 +159,25 @@ const CumulativeStepsChartContent = ({
 
   return (
     <Box>
-      <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+      {/* 達成率を大きく目立たせる */}
+      <Box sx={{ mb: 3, textAlign: 'center' }}>
+        <Typography 
+          variant="h4" 
+          sx={{ 
+            fontWeight: 'bold',
+            color: achievementRate >= 100 ? '#4caf50' : achievementRate >= 75 ? '#ff9800' : '#f44336',
+            mb: 1
+          }}
+        >
+          {achievementRate.toFixed(1)}%
+        </Typography>
+        <Typography variant="body2" color="textSecondary">
+          達成率
+        </Typography>
+      </Box>
+      
+      {/* その他の統計情報 */}
+      <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'center' }}>
         <Typography variant="body2" color="textSecondary">
           累積歩数: {totalSteps.toLocaleString()} 歩
         </Typography>
@@ -167,10 +185,7 @@ const CumulativeStepsChartContent = ({
           月間目標: {monthlyGoal.toLocaleString()} 歩
         </Typography>
         <Typography variant="body2" color="textSecondary">
-          達成率: {achievementRate.toFixed(1)}%
-        </Typography>
-        <Typography variant="body2" color="textSecondary">
-          平均: {dailyAverage.toLocaleString()}歩/日
+          平均: {Math.round(dailyAverage).toLocaleString()}歩/日
         </Typography>
       </Box>
       <Box sx={{ width: '100%', height: 400 }}>

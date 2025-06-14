@@ -1,6 +1,8 @@
-import { AppBar, Box, Button, Toolbar, Typography } from '@mui/material';
+import { Logout } from '@mui/icons-material';
+import { AppBar, Box, IconButton, Toolbar } from '@mui/material';
 import type { User } from 'firebase/auth';
 import type { ReactNode } from 'react';
+import { StepsLogo } from '../ui/StepsLogo';
 
 interface MainLayoutProps {
   user: User;
@@ -18,14 +20,13 @@ export const MainLayout = ({
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
         <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            月間歩数目標
-          </Typography>
-          {stepCounter && <Box sx={{ mr: 3 }}>{stepCounter}</Box>}
-          {/* <Typography sx={{ mr: 2 }}>{user.displayName}</Typography> */}
-          <Button color="inherit" onClick={onLogout}>
-            ログアウト
-          </Button>
+          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+            <StepsLogo sx={{ mr: 1, fontSize: 28 }} />
+          </Box>
+          {stepCounter && <Box sx={{ mr: 2 }}>{stepCounter}</Box>}
+          <IconButton color="inherit" onClick={onLogout} size="small">
+            <Logout />
+          </IconButton>
         </Toolbar>
       </AppBar>
       <Box component="main">{children}</Box>
