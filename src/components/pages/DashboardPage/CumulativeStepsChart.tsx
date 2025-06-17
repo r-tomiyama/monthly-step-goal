@@ -20,6 +20,7 @@ import { auth } from '../../../config/firebase';
 import { useMonthlyStepsQuery } from '../../../hooks/useMonthlyStepsQuery';
 import { useStepGoalQuery } from '../../../hooks/useStepGoalQuery';
 import { StepGoalSetting } from './StepGoalSetting';
+import { AchievementForecast } from './AchievementForecast';
 
 interface ChartData {
   date: string;
@@ -73,7 +74,10 @@ export const CumulativeStepsChart = () => {
           sx={{ mb: 2 }}
         >
           <Typography variant="h6">今月の累積歩数</Typography>
-          <StepGoalSetting />
+          <Box display="flex" alignItems="center" gap={2}>
+            <AchievementForecast />
+            <StepGoalSetting />
+          </Box>
         </Box>
         {content}
       </CardContent>
