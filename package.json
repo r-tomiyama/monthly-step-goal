@@ -16,7 +16,9 @@
     "lint": "run-s lint:*",
     "lint:types": "tsc --noEmit",
     "lint:format": "biome format src",
-    "lint:eslint": "biome lint src"
+    "lint:eslint": "biome lint src",
+    "deploy": "npm run build && firebase deploy",
+    "deploy:hosting": "npm run build && firebase deploy --only hosting"
   },
   "keywords": [],
   "author": "",
