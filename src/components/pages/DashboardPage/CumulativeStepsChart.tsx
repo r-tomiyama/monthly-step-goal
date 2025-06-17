@@ -5,6 +5,7 @@ import {
   CircularProgress,
   Typography,
 } from '@mui/material';
+import { TrendingDown, TrendingUp } from '@mui/icons-material';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import {
   Area,
@@ -52,6 +53,35 @@ export const CumulativeStepsChart = () => {
   } = useMonthlyStepsQuery(user || null);
   const { data: stepGoal } = useStepGoalQuery(user || null);
 
+  const dailyGoal = stepGoal?.dailyStepGoal || 3000;
+  let achievementIndicator: JSX.Element | null = null;
+
+  if (monthlySteps && monthlySteps.length > 0) {
+    const totalSteps = monthlySteps.reduce((sum, day) => sum + day.steps, 0);
+    const daysWithSteps = monthlySteps.filter((day) => day.steps > 0).length;
+    const dailyAverage = daysWithSteps > 0 ? totalSteps / daysWithSteps : 0;
+    const totalDays = monthlySteps.length;
+    const prediction = dailyAverage * totalDays;
+    const monthlyGoal = dailyGoal * totalDays;
+    const isLikelyToAchieve = prediction >= monthlyGoal;
+
+    achievementIndicator = (
+      <Box display="flex" alignItems="center" gap={0.5}>
+        {isLikelyToAchieve ? (
+          <TrendingUp fontSize="small" color="success" />
+        ) : (
+          <TrendingDown fontSize="small" color="error" />
+        )}
+        <Typography
+          variant="body2"
+          color={isLikelyToAchieve ? 'success.main' : 'error.main'}
+        >
+          達成見込み: {isLikelyToAchieve ? 'あり' : 'なし'}
+        </Typography>
+      </Box>
+    );
+  }
+
   const content = isLoading ? (
     <IsLoading />
   ) : error || !monthlySteps ? (
@@ -73,7 +103,10 @@ export const CumulativeStepsChart = () => {
           sx={{ mb: 2 }}
         >
           <Typography variant="h6">今月の累積歩数</Typography>
-          <StepGoalSetting />
+          <Box display="flex" alignItems="center" gap={2}>
+            {achievementIndicator}
+            <StepGoalSetting />
+          </Box>
         </Box>
         {content}
       </CardContent>
