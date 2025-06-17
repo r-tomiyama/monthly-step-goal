@@ -147,7 +147,6 @@ const CumulativeStepsChartContent = ({
   const maxCumulativeSteps = Math.max(totalSteps, monthlyGoal);
   const yAxisMax = Math.max(maxCumulativeSteps, monthlyGoal * 1.25);
 
-
   // 現在の1日平均歩数による予測線データ
   const dailyAverage = validDaysCount > 0 ? totalSteps / validDaysCount : 0;
   const combinedData = cumulativeData.map((day, index) => {
@@ -162,12 +161,17 @@ const CumulativeStepsChartContent = ({
     <Box>
       {/* 達成率を大きく目立たせる */}
       <Box sx={{ mb: 3, textAlign: 'center' }}>
-        <Typography 
-          variant="h4" 
-          sx={{ 
+        <Typography
+          variant="h4"
+          sx={{
             fontWeight: 'bold',
-            color: achievementRate >= 100 ? '#4caf50' : achievementRate >= 75 ? '#ff9800' : '#f44336',
-            mb: 1
+            color:
+              achievementRate >= 100
+                ? '#4caf50'
+                : achievementRate >= 75
+                  ? '#ff9800'
+                  : '#f44336',
+            mb: 1,
           }}
         >
           {achievementRate.toFixed(1)}%
@@ -176,9 +180,17 @@ const CumulativeStepsChartContent = ({
           達成率
         </Typography>
       </Box>
-      
+
       {/* その他の統計情報 */}
-      <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'center' }}>
+      <Box
+        sx={{
+          mb: 2,
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 2,
+          justifyContent: 'center',
+        }}
+      >
         <Typography variant="body2" color="textSecondary">
           累積歩数: {totalSteps.toLocaleString()} 歩
         </Typography>
@@ -232,13 +244,15 @@ const CumulativeStepsChartContent = ({
             />
             <Tooltip
               formatter={(value: number, name: string) => {
-                const displayName = name === 'cumulativeSteps' ? '実績' : 
-                                   name === 'goalCumulative' ? '目標' : 
-                                   name === 'predictionCumulative' ? '予測' : name;
-                return [
-                  value?.toLocaleString() || 0,
-                  displayName,
-                ];
+                const displayName =
+                  name === 'cumulativeSteps'
+                    ? '実績'
+                    : name === 'goalCumulative'
+                      ? '目標'
+                      : name === 'predictionCumulative'
+                        ? '予測'
+                        : name;
+                return [value?.toLocaleString() || 0, displayName];
               }}
               labelStyle={{ color: '#000' }}
               labelFormatter={(label) => {
