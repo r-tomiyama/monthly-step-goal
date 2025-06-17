@@ -140,7 +140,8 @@ const CumulativeStepsChartContent = ({
   const validDaysCount = cumulativeData.filter(
     (data) => data.cumulativeSteps !== null
   ).length;
-  const monthlyGoal = validDaysCount > 0 ? dailyGoal * validDaysCount : 0;
+  const totalDaysOnGraph = cumulativeData.length; // グラフ上に表示する全日数
+  const monthlyGoal = totalDaysOnGraph > 0 ? dailyGoal * totalDaysOnGraph : 0;
   const achievementRate =
     monthlyGoal > 0 ? (totalSteps / monthlyGoal) * 100 : 0;
   const maxCumulativeSteps = Math.max(totalSteps, monthlyGoal);
@@ -287,7 +288,7 @@ const CumulativeStepsChartContent = ({
             <Area
               dataKey="predictionCumulative"
               stroke="#9c27b0"
-              strokeDasharray="3 3"
+              strokeDasharray="5 5"
               fill="none"
               strokeWidth={2}
             />
