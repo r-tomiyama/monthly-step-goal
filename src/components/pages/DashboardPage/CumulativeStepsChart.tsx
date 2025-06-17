@@ -6,6 +6,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useAuthState } from 'react-firebase-hooks/auth';
+import { CheckCircle, ErrorOutline } from '@mui/icons-material';
 import {
   Area,
   AreaChart,
@@ -52,6 +53,18 @@ export const CumulativeStepsChart = () => {
   } = useMonthlyStepsQuery(user || null);
   const { data: stepGoal } = useStepGoalQuery(user || null);
 
+  let isForecastAchieved: boolean | null = null;
+  if (monthlySteps && monthlySteps.length > 0) {
+    const dailyGoal = stepGoal?.dailyStepGoal || 3000;
+    const totalSteps = monthlySteps.reduce((sum, day) => sum + day.steps, 0);
+    const daysWithData = monthlySteps.filter((day) => day.steps > 0).length;
+    const totalDays = monthlySteps.length;
+    const dailyAverage = daysWithData > 0 ? totalSteps / daysWithData : 0;
+    const predictedFinal = dailyAverage * totalDays;
+    const monthlyGoal = dailyGoal * totalDays;
+    isForecastAchieved = predictedFinal >= monthlyGoal;
+  }
+
   const content = isLoading ? (
     <IsLoading />
   ) : error || !monthlySteps ? (
@@ -73,7 +86,21 @@ export const CumulativeStepsChart = () => {
           sx={{ mb: 2 }}
         >
           <Typography variant="h6">今月の累積歩数</Typography>
-          <StepGoalSetting />
+          <Box display="flex" alignItems="center" gap={2}>
+            {isForecastAchieved !== null && (
+              <Box display="flex" alignItems="center" gap={0.5}>
+                {isForecastAchieved ? (
+                  <CheckCircle color="success" fontSize="small" />
+                ) : (
+                  <ErrorOutline color="warning" fontSize="small" />
+                )}
+                <Typography variant="body2" color="text.secondary">
+                  達成見込み: {isForecastAchieved ? 'あり' : 'なし'}
+                </Typography>
+              </Box>
+            )}
+            <StepGoalSetting />
+          </Box>
         </Box>
         {content}
       </CardContent>
